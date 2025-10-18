@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://c8bxk7l4g2ptw"]
+
+[ext_resource type="Shader" uid="uid://cwm1myjew46ip" path="res://Scripts/AudioSpectrum/Kaleidoscope/Kaleidoscope.gdshader" id="1_50bgh"]
+
+[resource]
+shader = ExtResource("1_50bgh")
+shader_parameter/spectrum = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/audio_strength = 0.5
+shader_parameter/color_intensity = 0.5

@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://chg8a2rxl1h8y"]
+
+[ext_resource type="Shader" uid="uid://cpnpnffud6o43" path="res://Scripts/AudioSpectrum/UnderWater/UnderWater.gdshader" id="1_twsnt"]
+
+[resource]
+shader = ExtResource("1_twsnt")
+shader_parameter/skycolor = Color(0, 0.0509804, 0.196078, 1)
+shader_parameter/bubble_speed = 1.0
+shader_parameter/bubble_count = 5

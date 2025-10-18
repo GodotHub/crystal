@@ -1,0 +1,127 @@
+[gd_scene load_steps=17 format=3 uid="uid://b74vcnhw3j5pe"]
+
+[ext_resource type="Script" uid="uid://c7pw4gagwy0fy" path="res://Scripts/LyricsLoader/Lrc/LrcLoader.cs" id="1_v1gob"]
+[ext_resource type="Material" uid="uid://ct6y8fn8rnbfa" path="res://Scripts/AudioSpectrum/RGBHalo/RGB_Halo.tres" id="4_vy5pj"]
+[ext_resource type="Script" uid="uid://c8j2ldmsbsg8c" path="res://Scripts/AudioSpectrum/RGBHalo/RgbHaloAudioSpectrum.cs" id="5_bmxlf"]
+[ext_resource type="Material" uid="uid://c8bxk7l4g2ptw" path="res://Scripts/AudioSpectrum/Kaleidoscope/Kaleidoscope.tres" id="5_jw32o"]
+[ext_resource type="Script" uid="uid://dan803rxx10v5" path="res://Scripts/AudioSpectrum/AudioSpectrumManager.cs" id="6_4kpch"]
+[ext_resource type="Script" uid="uid://bjgssq3f6tvag" path="res://Scripts/AudioSpectrum/Kaleidoscope/KaleidoscopeAudioSpectrum.cs" id="6_50glp"]
+[ext_resource type="Material" uid="uid://duutcsjd676rm" path="res://Scripts/AudioSpectrum/AudioBars/AudioBars.tres" id="7_vy5pj"]
+[ext_resource type="Script" uid="uid://jk7c4rf4bo4y" path="res://Scripts/AudioSpectrum/AudioBars/AudioBarsAudioSpectrum.cs" id="8_bmxlf"]
+[ext_resource type="Material" uid="uid://chg8a2rxl1h8y" path="res://Scripts/AudioSpectrum/UnderWater/UnderWater.tres" id="9_4kpch"]
+[ext_resource type="Script" uid="uid://dlvvykhc4i45j" path="res://Scripts/AudioSpectrum/UnderWater/UnderWaterAudioSpectrum.cs" id="10_grg3l"]
+[ext_resource type="Script" uid="uid://blosxxcv153o1" path="res://Scripts/DeviceOptionButton.cs" id="13_frkhe"]
+[ext_resource type="Script" uid="uid://dafoqsudl1fke" path="res://Scripts/NAudioCaptureAudioPlayer.cs" id="15_h1m7h"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_1bvp3"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_v1gob"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_50glp"]
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_4kpch"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_v1gob")
+Lines = Array[Resource]([])
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="."]
+
+[node name="RGB_Halo" type="TextureRect" parent="CanvasLayer2"]
+visible = false
+material = ExtResource("4_vy5pj")
+custom_minimum_size = Vector2(520, 520)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CanvasTexture_1bvp3")
+script = ExtResource("5_bmxlf")
+AudioPlayerPath = NodePath("../../AudioStreamPlayer")
+_shaderMaterial = ExtResource("4_vy5pj")
+
+[node name="AudioSpectrumManager" type="Node" parent="CanvasLayer2" node_paths=PackedStringArray("_audioStreamPlayer")]
+script = ExtResource("6_4kpch")
+_audioSpectrumPath = Dictionary[NodePath, bool]({
+NodePath("../RGB_Halo"): false,
+NodePath("../Kaleidoscope"): true,
+NodePath("../AudioBars"): true,
+NodePath("../UnderWater"): false
+})
+_audioStreamPlayer = NodePath("../../NAudioCaptureAudioPlayer")
+metadata/_custom_type_script = "uid://dan803rxx10v5"
+
+[node name="Kaleidoscope" type="TextureRect" parent="CanvasLayer2"]
+visible = false
+material = ExtResource("5_jw32o")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CanvasTexture_v1gob")
+script = ExtResource("6_50glp")
+AudioPlayerPath = NodePath("../../AudioStreamPlayer")
+_shaderMaterial = ExtResource("5_jw32o")
+
+[node name="AudioBars" type="TextureRect" parent="CanvasLayer2"]
+visible = false
+material = ExtResource("7_vy5pj")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CanvasTexture_50glp")
+script = ExtResource("8_bmxlf")
+AudioPlayerPath = NodePath("../../AudioStreamPlayer")
+_shaderMaterial = ExtResource("7_vy5pj")
+
+[node name="UnderWater" type="TextureRect" parent="CanvasLayer2"]
+visible = false
+material = ExtResource("9_4kpch")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CanvasTexture_4kpch")
+script = ExtResource("10_grg3l")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OptionButton" type="OptionButton" parent="CanvasLayer/Control" node_paths=PackedStringArray("player")]
+layout_mode = 0
+offset_right = 219.0
+offset_bottom = 37.0
+script = ExtResource("13_frkhe")
+player = NodePath("../../../NAudioCaptureAudioPlayer")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Music"
+
+[node name="NAudioCaptureAudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Music"
+script = ExtResource("15_h1m7h")
+metadata/_custom_type_script = "uid://dafoqsudl1fke"

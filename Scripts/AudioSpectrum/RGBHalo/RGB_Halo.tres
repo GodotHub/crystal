@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://ct6y8fn8rnbfa"]
+
+[ext_resource type="Shader" uid="uid://c3qs0hhkknm6r" path="res://Scripts/AudioSpectrum/RGBHalo/RGB_Halo.gdshader" id="1_yirgn"]
+
+[resource]
+shader = ExtResource("1_yirgn")
+shader_parameter/spectrum = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/time_shift = 0.1
+shader_parameter/color_shift_speed = 2.0
+shader_parameter/sensitivity = 0.3
+shader_parameter/min_height = 0.04
+shader_parameter/randomness = 0.3
+shader_parameter/rotation_speed = 1.0

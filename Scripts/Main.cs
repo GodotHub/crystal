@@ -9,6 +9,8 @@ public partial class Main : Node
 {
     public override void _Ready()
     {
+        GetTree().Root.SetTransparentBackground(true);
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || 
             RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
         {

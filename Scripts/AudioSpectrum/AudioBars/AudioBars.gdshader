@@ -1,11 +1,12 @@
 shader_type canvas_item;
 
+const int bit = 256;
 // 从C#传递的频谱数据
-uniform float spectrum[128];
+uniform float spectrum[bit];
 // 颜色渐变控制
-uniform vec4 color_low : source_color = vec4(0.0, 0.0, 1.0, 1.0); // 低频颜色 (蓝色)
-uniform vec4 color_mid : source_color = vec4(0.0, 0.0, 1.0, 1.0); // 中频颜色 (绿色)
-uniform vec4 color_high : source_color = vec4(0.0, 0.0, 1.0, 1.0); // 高频颜色 (红色)
+uniform vec4 color_low : source_color = vec4(0.2, 0.6, 0.8, 1.0); // 柔和浅蓝（低频）
+uniform vec4 color_mid : source_color = vec4(0.2, 0.8, 0.6, 1.0); // 柔和淡绿（中频）
+uniform vec4 color_high : source_color = vec4(0.8, 0.6, 0.9, 1.0); // 柔和淡紫（高频）
 // 灵敏度控制
 uniform float sensitivity = 1.0;
 // 背景颜色
@@ -18,16 +19,16 @@ void fragment() {
     vec2 uv = FRAGCOORD.xy / iResolution.xy;
     
     // 计算当前像素属于哪个频段(0-127)
-    int band = int(uv.x * 128.0);
+    int band = int(uv.x * float(bit));
     
     // 确保band在有效范围内
-    band = clamp(band, 0, 127);
+    band = clamp(band, 0, bit - 1);
     
     // 获取对应频段的强度值
     float intensity = spectrum[band] * sensitivity;
     
     // 计算颜色混合因子 (基于频段)
-    float color_factor = float(band) / 127.0;
+    float color_factor = float(band) / float(bit - 1);
     vec4 band_color;
     
     if (color_factor < 0.5) {

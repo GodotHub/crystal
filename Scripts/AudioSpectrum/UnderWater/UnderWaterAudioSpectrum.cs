@@ -1,7 +1,6 @@
-using System;
 using Godot;
 
-namespace CrystalPhoenix.Scripts.AudioSpectrum.UnderWater
+namespace Crystal.Scripts.AudioSpectrum.UnderWater
 {
     /// <summary>
     /// 音频气泡效果控制器

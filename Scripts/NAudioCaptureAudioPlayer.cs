@@ -3,14 +3,19 @@ using Godot;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace CrystalPhoenix.Scripts;
+namespace Crystal.Scripts;
 
+/// <summary>
+/// NAudio 音频采集播放器（带数据平滑过渡功能）
+/// </summary>
 [GlobalClass]
 public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
 {
+    private bool _isRunning;
+    public bool IsRunning => _isRunning;
     
     private WasapiCapture _capture;
-    public MMDevice _device;
+    public MMDevice Device;
     private WaveFormat _captureFormat;
     private AudioStreamGeneratorPlayback _playback;
     
@@ -18,10 +23,55 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
     [Export] public int TargetSampleRate { get; set; } = 192000;
     [Export] public float BufferLength { get; set; } = 0.05f;
 
+    #region 平滑过渡相关配置与状态
+    /// <summary>
+    /// 音频平滑系数（0~1），值越大平滑效果越明显（过渡越慢），0表示无平滑
+    /// </summary>
+    [Export] public float SmoothFactor { get; set; } = 0.1f;
+    
+    /// <summary>
+    /// 停止采集时的淡出时长（秒），避免突然静音的突兀感
+    /// </summary>
+    [Export] public float FadeOutDuration { get; set; } = 0.2f;
+    
+    /// <summary>
+    /// 上一帧左声道样本值（用于线性插值平滑）
+    /// </summary>
+    private float _lastLeftSample = 0f;
+    
+    /// <summary>
+    /// 上一帧右声道样本值（用于线性插值平滑）
+    /// </summary>
+    private float _lastRightSample = 0f;
+    
+    /// <summary>
+    /// 是否正在执行淡出流程
+    /// </summary>
+    private bool _isFadingOut = false;
+    
+    /// <summary>
+    /// 淡出计时器（记录已处理的淡出样本数）
+    /// </summary>
+    private float _fadeOutTimer = 0f;
+    
+    /// <summary>
+    /// 淡出所需的总样本数
+    /// </summary>
+    private int _fadeOutTotalSamples = 0;
+
+    /// <summary>
+    /// 标记是否已触发Godot主线程清理，避免重复调用
+    /// </summary>
+    private bool _isGodotCleanupTriggered = false;
+    #endregion
+
     public override void _Ready()
     {
+        // 限制平滑系数和淡出时长的合理范围
+        SmoothFactor = Mathf.Clamp(SmoothFactor, 0.01f, 0.99f);
+        FadeOutDuration = Mathf.Clamp(FadeOutDuration, 0.05f, 1f);
+        
         // 初始化Godot音频生成器
-
         InitializeNAudioCapture();
     }
 
@@ -36,11 +86,17 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
     
     public void InitializeNAudioCapture(MMDevice device = null)
     {
+        // 重置主线程清理标记
+        _isGodotCleanupTriggered = false;
+
         var generator = new AudioStreamGenerator();
         generator.MixRate = TargetSampleRate;
         generator.BufferLength = BufferLength;
         this.Stream = generator;
         this.Play();
+
+        // 重置平滑过渡状态
+        ResetSmoothState();
 
         if (this.IsPlaying())
         {
@@ -48,12 +104,11 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
 
             if (device == null)
             {
-                GD.PushWarning("选择默认设备");
                 device = WasapiLoopbackCapture.GetDefaultLoopbackCaptureDevice();
-                GD.Print(device);
+                GD.Print("选择默认设备" + device);
             }
             
-            _device = device;
+            Device = device;
 
             if (_capture != null)
             {
@@ -92,11 +147,97 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
                 _capture = null;
             }
         }
+        _isRunning =  true;
+    }
+
+    /// <summary>
+    /// 重置平滑过渡相关状态
+    /// </summary>
+    private void ResetSmoothState()
+    {
+        _lastLeftSample = 0f;
+        _lastRightSample = 0f;
+        _isFadingOut = false;
+        _fadeOutTimer = 0f;
+        _fadeOutTotalSamples = 0;
+    }
+
+    public void StopNAudioCapture()
+    {
+        if (_isFadingOut) return; // 避免重复触发淡出流程
+
+        // 若正在播放，先执行淡出过渡，再停止资源
+        if (this.IsPlaying() && _playback != null && _capture != null)
+        {
+            _isFadingOut = true;
+            // 计算淡出所需的总样本数（淡出时长 * 采样率）
+            _fadeOutTotalSamples = (int)(FadeOutDuration * TargetSampleRate);
+            _fadeOutTimer = 0f;
+            GD.Print("开始音频淡出过渡...");
+            return;
+        }
+
+        // 若未在播放，直接清理资源
+        CleanupCaptureResources();
+    }
+
+    /// <summary>
+    /// 【新增】Godot主线程专属清理方法（仅处理Node相关操作）
+    /// 该方法将通过CallDeferred延迟到主线程执行
+    /// </summary>
+    private void CleanupGodotAudioPlayer()
+    {
+        if (this.IsPlaying())
+        {
+            this.Stop();
+            this.Stream = null;
+        }
+        GD.Print("Godot音频播放器资源已清理");
+    }
+
+    /// <summary>
+    /// 清理音频捕获相关资源
+    /// 【修改】拆分Godot节点操作（延迟执行）和NAudio资源操作（直接执行）
+    /// </summary>
+    private void CleanupCaptureResources()
+    {
+        // 避免重复触发Godot主线程清理
+        if (!_isGodotCleanupTriggered)
+        {
+            _isGodotCleanupTriggered = true;
+            // 关键：通过CallDeferred将Godot节点操作延迟到主线程执行
+            this.CallDeferred(nameof(CleanupGodotAudioPlayer));
+        }
+
+        // NAudio资源释放（线程安全，可直接在工作线程执行）
+        if (_capture != null)
+        {
+            // 先移除事件订阅，避免内存泄漏
+            _capture.DataAvailable -= OnNAudioDataAvailable;
+            try
+            {
+                if (_capture.CaptureState == CaptureState.Capturing)
+                {
+                    _capture.StopRecording();
+                }
+            }
+            catch (Exception e)
+            {
+                GD.PrintErr($"停止NAudio捕获失败: {e.Message}");
+            }
+            _capture.Dispose();
+            _capture = null;
+        }
+        
+        Device = null;
+        _isRunning = false;
+        ResetSmoothState(); // 重置平滑状态
+        GD.Print("NAudio捕获资源已清理完成。");
     }
     
     private void OnNAudioDataAvailable(object sender, WaveInEventArgs e)
     {
-        if (_playback == null) return;
+        if (_playback == null || (_isFadingOut && _fadeOutTimer >= _fadeOutTotalSamples)) return;
 
         int bytesPerSample = _captureFormat.BitsPerSample / 8;
         int sampleCount = e.BytesRecorded / (bytesPerSample * _captureFormat.Channels);
@@ -106,9 +247,9 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
         {
             case WaveFormatEncoding.Pcm:
                 if (_captureFormat.BitsPerSample == 16)
-                    Process16BitPcmData(e.Buffer, sampleCount);
+                    Process16BitPcmData(e.Buffer, sampleCount, _captureFormat.Channels);
                 else if (_captureFormat.BitsPerSample == 32)
-                    Process32BitPcmData(e.Buffer, sampleCount);
+                    Process32BitPcmData(e.Buffer, sampleCount, _captureFormat.Channels);
                 break;
             case WaveFormatEncoding.IeeeFloat:
                 ProcessFloatData(e.Buffer, sampleCount);
@@ -119,10 +260,8 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
         }
     }
     
-    private void Process16BitPcmData(byte[] buffer, int sampleCount)
+    private void Process16BitPcmData(byte[] buffer, int sampleCount, int channels)
     {
-        int channels = _captureFormat.Channels;
-        
         for (int i = 0; i < sampleCount; i++)
         {
             if (!_playback.CanPushBuffer(1)) break;
@@ -144,15 +283,44 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
                 rightFloat = rightSample / 32768.0f;
                 rightFloat = Mathf.Clamp(rightFloat, -1.0f, 1.0f);
             }
+
+            // 1. 线性插值平滑过渡：避免音频帧突变
+            float smoothedLeft = Mathf.Lerp(_lastLeftSample, leftFloat, 1 - SmoothFactor);
+            float smoothedRight = Mathf.Lerp(_lastRightSample, rightFloat, 1 - SmoothFactor);
             
-            _playback.PushFrame(new Vector2(leftFloat, rightFloat));
+            // 重新限制范围
+            smoothedLeft = Mathf.Clamp(smoothedLeft, -1.0f, 1.0f);
+            smoothedRight = Mathf.Clamp(smoothedRight, -1.0f, 1.0f);
+
+            // 2. 处理停止时的淡出过渡
+            if (_isFadingOut)
+            {
+                _fadeOutTimer++;
+                // 计算淡出权重（从1线性衰减到0）
+                float fadeWeight = Mathf.Clamp(1 - (_fadeOutTimer / _fadeOutTotalSamples), 0f, 1f);
+                // 应用淡出效果
+                smoothedLeft *= fadeWeight;
+                smoothedRight *= fadeWeight;
+
+                // 淡出完成后清理资源
+                if (_fadeOutTimer >= _fadeOutTotalSamples)
+                {
+                    CleanupCaptureResources();
+                    break;
+                }
+            }
+
+            // 推送平滑后的音频帧
+            _playback.PushFrame(new Vector2(smoothedLeft, smoothedRight));
+
+            // 更新上一帧样本值，用于下一帧插值
+            _lastLeftSample = smoothedLeft;
+            _lastRightSample = smoothedRight;
         }
     }
     
-    private void Process32BitPcmData(byte[] buffer, int sampleCount)
+    private void Process32BitPcmData(byte[] buffer, int sampleCount, int channels)
     {
-        int channels = _captureFormat.Channels;
-        
         for (int i = 0; i < sampleCount; i++)
         {
             if (!_playback.CanPushBuffer(1)) break;
@@ -171,8 +339,34 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
                 rightFloat = rightSample / 2147483648.0f;
                 rightFloat = Mathf.Clamp(rightFloat, -1.0f, 1.0f);
             }
+
+            // 1. 线性插值平滑过渡
+            float smoothedLeft = Mathf.Lerp(_lastLeftSample, leftFloat, 1 - SmoothFactor);
+            float smoothedRight = Mathf.Lerp(_lastRightSample, rightFloat, 1 - SmoothFactor);
             
-            _playback.PushFrame(new Vector2(leftFloat, rightFloat));
+            smoothedLeft = Mathf.Clamp(smoothedLeft, -1.0f, 1.0f);
+            smoothedRight = Mathf.Clamp(smoothedRight, -1.0f, 1.0f);
+
+            // 2. 处理停止时的淡出过渡
+            if (_isFadingOut)
+            {
+                _fadeOutTimer++;
+                float fadeWeight = Mathf.Clamp(1 - (_fadeOutTimer / _fadeOutTotalSamples), 0f, 1f);
+                smoothedLeft *= fadeWeight;
+                smoothedRight *= fadeWeight;
+
+                if (_fadeOutTimer >= _fadeOutTotalSamples)
+                {
+                    CleanupCaptureResources();
+                    break;
+                }
+            }
+
+            _playback.PushFrame(new Vector2(smoothedLeft, smoothedRight));
+
+            // 更新上一帧样本值
+            _lastLeftSample = smoothedLeft;
+            _lastRightSample = smoothedRight;
         }
     }
     
@@ -195,16 +389,42 @@ public partial class NAudioCaptureAudioPlayer : AudioStreamPlayer
                 float rightSample = BitConverter.ToSingle(buffer, byteOffset + 4);
                 rightFloat = Mathf.Clamp(rightSample, -1.0f, 1.0f);
             }
+
+            // 1. 线性插值平滑过渡
+            float smoothedLeft = Mathf.Lerp(_lastLeftSample, leftFloat, 1 - SmoothFactor);
+            float smoothedRight = Mathf.Lerp(_lastRightSample, rightFloat, 1 - SmoothFactor);
             
-            _playback.PushFrame(new Vector2(leftFloat, rightFloat));
+            smoothedLeft = Mathf.Clamp(smoothedLeft, -1.0f, 1.0f);
+            smoothedRight = Mathf.Clamp(smoothedRight, -1.0f, 1.0f);
+
+            // 2. 处理停止时的淡出过渡
+            if (_isFadingOut)
+            {
+                _fadeOutTimer++;
+                float fadeWeight = Mathf.Clamp(1 - (_fadeOutTimer / _fadeOutTotalSamples), 0f, 1f);
+                smoothedLeft *= fadeWeight;
+                smoothedRight *= fadeWeight;
+
+                if (_fadeOutTimer >= _fadeOutTotalSamples)
+                {
+                    CleanupCaptureResources();
+                    break;
+                }
+            }
+
+            _playback.PushFrame(new Vector2(smoothedLeft, smoothedRight));
+
+            // 更新上一帧样本值
+            _lastLeftSample = smoothedLeft;
+            _lastRightSample = smoothedRight;
         }
     }
 
     public override void _ExitTree()
     {
-        _capture?.StopRecording();
-        _capture?.Dispose();
-        _capture = null;
+        // 退出时强制清理资源，确保无内存泄漏
+        _isFadingOut = false; // 跳过淡出流程，直接强制清理
+        CleanupCaptureResources();
         base._ExitTree();
     }
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace CrystalPhoenix.Scripts.AudioSpectrum
+namespace Crystal.Scripts.AudioSpectrum
 {
     /// <summary>
     /// 音频频谱管理器

@@ -1,8 +1,7 @@
-using Godot;
 using System;
+using Godot;
 
-
-namespace CrystalPhoenix.Scripts.AudioSpectrum.Kaleidoscope
+namespace Crystal.Scripts.AudioSpectrum.Kaleidoscope
 {
     /// <summary>
     /// 万花筒音频频谱

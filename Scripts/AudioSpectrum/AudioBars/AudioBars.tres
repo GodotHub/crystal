@@ -4,9 +4,9 @@
 
 [resource]
 shader = ExtResource("1_50bgh")
-shader_parameter/spectrum = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-shader_parameter/color_low = Color(0.31321007, 0.5220671, 1, 1)
-shader_parameter/color_mid = Color(0.63229096, 0.75375175, 1, 1)
-shader_parameter/color_high = Color(0.80009687, 0.8672754, 1, 1)
-shader_parameter/sensitivity = 1.0
+shader_parameter/spectrum = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/color_low = Color(0.2, 0.6, 0.8, 1)
+shader_parameter/color_mid = Color(0.2, 0.8, 0.6, 1)
+shader_parameter/color_high = Color(0.8, 0.6, 0.9, 1)
+shader_parameter/sensitivity = 1.2
 shader_parameter/bg_color = Color(0, 0, 0, 0.5)

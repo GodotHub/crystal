@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=3 uid="uid://b74vcnhw3j5pe"]
 
-[ext_resource type="Script" uid="uid://c7pw4gagwy0fy" path="res://Scripts/LyricsLoader/Lrc/LrcLoader.cs" id="1_v1gob"]
+[ext_resource type="Script" uid="uid://c3ncffhqoraqx" path="res://Scripts/Main.cs" id="1_frkhe"]
 [ext_resource type="Material" uid="uid://ct6y8fn8rnbfa" path="res://Scripts/AudioSpectrum/RGBHalo/RGB_Halo.tres" id="4_vy5pj"]
 [ext_resource type="Script" uid="uid://c8j2ldmsbsg8c" path="res://Scripts/AudioSpectrum/RGBHalo/RgbHaloAudioSpectrum.cs" id="5_bmxlf"]
 [ext_resource type="Material" uid="uid://c8bxk7l4g2ptw" path="res://Scripts/AudioSpectrum/Kaleidoscope/Kaleidoscope.tres" id="5_jw32o"]
@@ -28,8 +28,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_v1gob")
-Lines = Array[Resource]([])
+script = ExtResource("1_frkhe")
+
+[node name="CanvasLayer3" type="CanvasLayer" parent="."]
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer3"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
 
 [node name="CanvasLayer2" type="CanvasLayer" parent="."]
 
@@ -56,8 +66,8 @@ _shaderMaterial = ExtResource("4_vy5pj")
 [node name="AudioSpectrumManager" type="Node" parent="CanvasLayer2" node_paths=PackedStringArray("_audioStreamPlayer")]
 script = ExtResource("6_4kpch")
 _audioSpectrumPath = Dictionary[NodePath, bool]({
-NodePath("../RGB_Halo"): false,
-NodePath("../Kaleidoscope"): true,
+NodePath("../RGB_Halo"): true,
+NodePath("../Kaleidoscope"): false,
 NodePath("../AudioBars"): true,
 NodePath("../UnderWater"): false
 })

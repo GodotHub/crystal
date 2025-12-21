@@ -1,10 +1,10 @@
-using Godot;
-using System;
-using System.Linq;
-using CrystalPhoenix.Scripts;
-using NAudio.CoreAudioApi;
 using System.Collections.Generic;
+using System.Linq;
+using Godot;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
+
+namespace Crystal.Scripts;
 
 public partial class DeviceOptionButton : OptionButton
 {
@@ -42,6 +42,11 @@ public partial class DeviceOptionButton : OptionButton
         {
             if (index >= 0 && index < _devices.Count)
             {
+                if (player.IsRunning)
+                {
+                    player.StopNAudioCapture();
+                }
+
                 player.InitializeNAudioCapture(_devices[this.Selected]);
             }
         };

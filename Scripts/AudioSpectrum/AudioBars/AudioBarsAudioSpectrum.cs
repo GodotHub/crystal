@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace CrystalPhoenix.Scripts.AudioSpectrum.AudioBars
+namespace Crystal.Scripts.AudioSpectrum.AudioBars
 {
     /// <summary>
     /// 音频条音频频谱
@@ -17,7 +17,7 @@ namespace CrystalPhoenix.Scripts.AudioSpectrum.AudioBars
         private ShaderMaterial _shaderMaterial;
 
         // 频谱分析参数
-        private const int SpectrumSize = 128;
+        private const int SpectrumSize = 256;
         private readonly float[] _spectrumData = new float[SpectrumSize];
 
         private readonly float[] _smoothedSpectrum = new float[SpectrumSize];

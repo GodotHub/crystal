@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace CrystalPhoenix.Scripts.AudioSpectrum.RGBHalo
+namespace Crystal.Scripts.AudioSpectrum.RGBHalo
 {
     /// <summary>
     /// RGB光环音频频谱

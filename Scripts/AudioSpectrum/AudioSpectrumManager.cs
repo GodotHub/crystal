@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Crystal.Scripts.Linux;
+using Crystal.Scripts.Win;
 using Godot;
 
 namespace Crystal.Scripts.AudioSpectrum
@@ -20,10 +22,21 @@ namespace Crystal.Scripts.AudioSpectrum
         
         [Export]
         private AudioStreamPlayer _audioStreamPlayer;
+        
+        public AudioStreamPlayer AudioStreamPlayer => _audioStreamPlayer;
 
         // 这么写只是为了测试
         public override void _Ready()
         {
+            if (OS.GetName() == "Windows")
+            {
+                _audioStreamPlayer = new NAudioCaptureAudioPlayer();
+            }
+            else if (OS.GetName() == "Linux")
+            {
+                _audioStreamPlayer = new PulseAudioCaptureAudioPlayer();
+            }
+            AddChild(AudioStreamPlayer);
             RefreshAudioSpectrums();
             
         }

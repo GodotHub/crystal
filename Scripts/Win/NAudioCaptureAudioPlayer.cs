@@ -3,7 +3,7 @@ using Godot;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
-namespace Crystal.Scripts;
+namespace Crystal.Scripts.Win;
 
 /// <summary>
 /// NAudio 音频采集播放器（带数据平滑过渡功能）

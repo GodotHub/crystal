@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Crystal.Scripts.AudioSpectrum;
+using Crystal.Scripts.Linux;
 using Godot;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -8,46 +10,42 @@ namespace Crystal.Scripts;
 
 public partial class DeviceOptionButton : OptionButton
 {
-    [Export]
-    public NAudioCaptureAudioPlayer player {  get; set; }
-    
-    private Dictionary<int, MMDevice> _devices = new Dictionary<int, MMDevice>();
-    
-    public override void _Ready()
-    { 
-        var devs = NAudioCaptureAudioPlayer.GetRenderDevices();
+    [Export] public AudioSpectrumManager  _spectrumManager;
+    [Export] public Linux.PulseAudioCaptureAudioPlayer player { get; set; }
 
-        this._devices = new Dictionary<int, MMDevice>();
+    private Dictionary<int, string> _devices = new Dictionary<int, string>();
+
+    public override void _Ready()
+    {
+        player = _spectrumManager.AudioStreamPlayer as PulseAudioCaptureAudioPlayer;
         
+        var devs = player.GetAudioDevices();
+
+        this._devices = new Dictionary<int, string>();
+
         var target = -1;
 
         for (int i = 0; i < devs.Count(); i++)
         {
             var dev = devs.ElementAt(i);
-            if (dev.State == DeviceState.Active)
+            if (dev != null)
             {
-                if (dev.ID ==  WasapiLoopbackCapture.GetDefaultLoopbackCaptureDevice().ID)
-                {
-                    GD.Print(i);
-                    target = i;
-                }
-                _devices[i] = dev;
-                this.AddItem(dev.FriendlyName, i);
+                this._devices[i] = dev;
+                this.AddItem(dev, i);
             }
-            Select(target);
+
         }
         
-
         this.ItemSelected += index =>
         {
             if (index >= 0 && index < _devices.Count)
             {
                 if (player.IsRunning)
                 {
-                    player.StopNAudioCapture();
+                    player.StopAudioCapture();
                 }
 
-                player.InitializeNAudioCapture(_devices[this.Selected]);
+                player.InitializePulseAudioCapture(_devices[this.Selected]);
             }
         };
     }
